@@ -1,6 +1,9 @@
-name: base
+name: gemini-app
 channels:
   - conda-forge
 dependencies:
   - python=3.10
   - pip
+  - pip:
+    - google-generative-ai
+    - streamlit
