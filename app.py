@@ -1,62 +1,61 @@
 import streamlit as st
-import subprocess
-import sys
+import google.generative_ai as genai
 
-# --- BLOQUE MÁGICO DE AUTO-INSTALACIÓN ---
-# Esto obliga al sistema a instalar la herramienta si no la encuentra
-try:
-    import google.generative_ai as genai
-except ImportError:
-    st.warning("Instalando herramientas de IA... espera unos segundos...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "google-generative-ai"])
-    import google.generative_ai as genai
-    st.rerun() # Recarga la página automáticamente al terminar
-
-# --- CONFIGURACIÓN DE PÁGINA ---
+# --- CONFIGURACIÓN ---
 st.set_page_config(page_title="Generador de Historias", page_icon="✨")
 
-# --- INTERFAZ SIMPLE ---
-st.title("🚀 Generador de Historias de Usuario")
-st.markdown("---")
+st.markdown("""
+    <style>
+    .stButton>button {width: 100%; background-color: #0068C9; color: white;}
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- LÓGICA DE LA IA ---
+st.title("🚀 Generador de Historias de Usuario")
+st.markdown("Transforma una idea breve en una especificación técnica lista para desarrollo.")
+
+# --- LÓGICA INTELIGENTE ---
 def generar_historia(prompt_usuario):
-    # Recuperamos la clave de los secretos
+    # Busca la clave en los secretos
     api_key = st.secrets.get("GEMINI_API_KEY")
     
     if not api_key:
-        return "⚠️ Error: No encontré la GEMINI_API_KEY en los 'Secrets' de Streamlit."
+        return "⚠️ Error: No encontré la clave API. Configúrala en 'Secrets'."
     
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel("gemini-1.5-flash")
         
-        # Prompt del sistema resumido para no ocupar espacio
+        # Tu prompt experto resumido
         system_instruction = """
-        Actúa como experto en Product Management. 
-        Recibirás una solicitud básica y debes generar una Historia de Usuario formato INVEST.
-        Estructura: Título, Como/Quiero/Para, Criterios de Aceptación (Gherkin).
+        ERES un experto Product Manager.
+        Tu tarea: Convertir el input del usuario en una Historia de Usuario formato INVEST.
+        Output esperado:
+        1. Título
+        2. "Como [Rol], Quiero [Acción], Para [Beneficio]"
+        3. Criterios de Aceptación (Gherkin: Dado/Cuando/Entonces).
+        4. Estimación de esfuerzo.
         """
         
-        full_prompt = f"{system_instruction}\n\nSolicitud del usuario: {prompt_usuario}"
+        full_prompt = f"{system_instruction}\n\nRequerimiento del usuario: {prompt_usuario}"
         response = model.generate_content(full_prompt)
         return response.text
     except Exception as e:
-        return f"Ocurrió un error: {str(e)}"
+        return f"Error de conexión con Google: {str(e)}"
 
-# --- FORMULARIO ---
+# --- INTERFAZ ---
 col1, col2 = st.columns(2)
 with col1:
     rol = st.text_input("Como...", placeholder="Ej: Vendedor")
 with col2:
-    meta = st.text_input("Quiero...", placeholder="Ej: ver mis ventas")
+    meta = st.text_input("Quiero...", placeholder="Ej: descargar reporte PDF")
     
-beneficio = st.text_input("Para...", placeholder="Ej: saber cuánto gané")
+beneficio = st.text_input("Para...", placeholder="Ej: enviarlo por correo")
 
 if st.button("Generar Historia Profesional"):
     if rol and meta and beneficio:
-        with st.spinner("La IA está escribiendo..."):
-            texto_final = generar_historia(f"Como {rol}, quiero {meta}, para {beneficio}")
-            st.markdown(texto_final)
+        with st.spinner("Redactando criterios de aceptación..."):
+            resultado = generar_historia(f"Como {rol}, quiero {meta}, para {beneficio}")
+            st.markdown("---")
+            st.markdown(resultado)
     else:
-        st.warning("Por favor completa los 3 campos.")
+        st.warning("Completa los 3 campos por favor.")
