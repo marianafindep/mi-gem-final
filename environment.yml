@@ -1,0 +1,9 @@
+name: gemini-env
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - streamlit
+    - google-generative-ai
